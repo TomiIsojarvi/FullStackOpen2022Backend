@@ -1,7 +1,10 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
+
+const Person = require('./models/person')
 
 // generateId - Generates an id for a person.
 const generateId = () => {
@@ -17,7 +20,7 @@ const generateId = () => {
   next()
 }*/
 
-morgan.token('person', function (req, res) { return JSON.stringify(req.body )})
+morgan.token('person', function (req, res) { return JSON.stringify(req.body) })
 
 // Middlewares
 app.use(cors())
@@ -26,101 +29,106 @@ app.use(express.json())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :person'))
 app.use(express.static('build'))
 
-// Hard-coded persons
-let persons = [
-  {
-    "name": "Arto Hellas",
-    "number": "040-123456",
-    "id": 1
-  },
-  {
-    "name": "Ada Lovelace",
-    "number": "39-44-5323523",
-    "id": 2
-  },
-  {
-    "name": "Dan Abramov",
-    "number": "12-43-234345",
-    "id": 3
-  },
-  {
-    "name": "Mary Poppendieck",
-    "number": "39-23-6423122",
-    "id": 4
-  }
-]
-
-
 // GET / - Root
 app.get('/', (req, res) => {
   res.send('<h1>Hello World!</h1>')
 })
 
 // GET /info - Get info
-app.get('/info', (req, res) => {
+app.get('/info', (req, res, next) => {
   const date = new Date()
-  const result = persons.length
 
-  res.send("<p>Phonebook has info for " + result + " people.</p>" +
-    "<p>" + date + "</p>")
+  Person.count({}, function (err, result) {
+    if (err) {
+      next(err)
+    } else {
+      res.send("<p>Phonebook has info for " + result + " people.</p>" +
+        "<p>" + date + "</p>")
+    }
+  })
 })
 
 // GET /api/persons - Get all persons.
-app.get('/api/persons', (req, res) => {
-  res.json(persons)
+app.get('/api/persons', (req, res, next) => {
+  Person.find({}).then(persons => {
+    res.json(persons)
+  })
+    .catch(error => next(error))
 })
 
 // GET /api/persons/:id - Get a person with a specific id.
-app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const person = persons.find(person => person.id === id)
-
-  if (person) {
-    res.json(person)
-  } else {
-    res.status(404).end()
-  }
+app.get('/api/persons/:id', (req, res, next) => {
+  Person.findById(req.params.id)
+    .then(person => {
+      if (person) {
+        res.json(person)
+      } else {
+        res.status(404).end()
+      }
+    })
+    .catch(error => next(error))
 })
 
 // DELETE /api/persons/:id - Deletes a person with a specfic id.
-app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  persons = persons.filter(person => person.id !== id)
-
-  res.status(204).end()
+app.delete('/api/persons/:id', (req, res, next) => {
+  Person.findByIdAndRemove(req.params.id)
+    .then(result => {
+      res.status(204).end()
+    })
+    .catch(error => next(error))
 })
 
-// POST /api/persons - Creates a new user.
-app.post('/api/persons', (req, res) => {
+// PUT /api/persons/:id - Update a person 
+app.put('/api/persons/:id', (req, res, next) => {
   const body = req.body
-
-  if (!body.name) {
-    return res.status(400).json({ 
-      error: 'Name missing' 
-    })
-  }
-
-  if (!body.number) {
-    return res.status(400).json({ 
-      error: 'Number missing' 
-    })
-  }
-
-  if (persons.find(person => person.name === body.name)) {
-    return res.status(400).json({
-      error: 'Name must be unique'
-    })
-  }
 
   const person = {
     name: body.name,
     number: body.number,
-    id: generateId(),
   }
 
-  persons = persons.concat(person)
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then(updatedPerson => {
+      res.json(updatedPerson)
+    })
+    .catch(error => next(error))
+})
 
-  res.json(person)
+// POST /api/persons - Creates a new user.
+app.post('/api/persons', (req, res, next) => {
+  const body = req.body
+
+  if (body.name === undefined) {
+    return res.status(400).json({
+      error: 'Name missing'
+    })
+  }
+
+  if (body.number === undefined) {
+    return res.status(400).json({
+      error: 'Number missing'
+    })
+  }
+
+  // Tämä tuottaa ongelmia asynkronisen luonteen vuoksi...
+  // En tiedä vielä mitä tehdä sille...
+  /*Person.find({ name: body.name })
+    .then(result => {
+      return res.status(400).json({
+        error: 'Name must be unique'
+      })
+    })*/
+
+  const person = new Person({
+    name: body.name,
+    number: body.number
+  })
+
+  person.save()
+    .then(savedNote => {
+      res.json(savedNote)
+    })
+    .catch(error => next(error))
 })
 
 // unknownEndpoint - Middleware for unknown endpoints 
@@ -130,8 +138,21 @@ const unknownEndpoint = (req, res) => {
 
 app.use(unknownEndpoint)
 
+// errorHandler - Middleware for handling errors.
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'Malformatted id' })
+  }
+
+  next(error)
+}
+
+app.use(errorHandler)
+
 // Startup the server.
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
