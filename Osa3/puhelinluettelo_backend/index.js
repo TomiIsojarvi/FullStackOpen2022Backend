@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const morgan = require('morgan')
+const cors = require('cors')
 
 // generateId - Generates an id for a person.
 const generateId = () => {
@@ -19,9 +20,11 @@ const generateId = () => {
 morgan.token('person', function (req, res) { return JSON.stringify(req.body )})
 
 // Middlewares
+app.use(cors())
 app.use(express.json())
 //app.use(requestLogger)
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :person'))
+app.use(express.static('build'))
 
 // Hard-coded persons
 let persons = [
@@ -128,7 +131,7 @@ const unknownEndpoint = (req, res) => {
 app.use(unknownEndpoint)
 
 // Startup the server.
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
