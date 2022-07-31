@@ -1,8 +1,29 @@
 const express = require('express')
 const app = express()
+const morgan = require('morgan')
 
+// generateId - Generates an id for a person.
+const generateId = () => {
+  return Math.floor(Math.random() * 100000)
+}
+
+// requestLogger - Middleware for requests
+/*const requestLogger = (req, res, next) => {
+  console.log('Method:', req.method)
+  console.log('Path:  ', req.path)
+  console.log('Body:  ', req.body)
+  console.log('---')
+  next()
+}*/
+
+morgan.token('person', function (req, res) { return JSON.stringify(req.body )})
+
+// Middlewares
 app.use(express.json())
+//app.use(requestLogger)
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :person'))
 
+// Hard-coded persons
 let persons = [
   {
     "name": "Arto Hellas",
@@ -26,10 +47,6 @@ let persons = [
   }
 ]
 
-// generateId - Generates an id for a person.
-const generateId = () => {
-  return Math.floor(Math.random() * 100000)
-}
 
 // GET / - Root
 app.get('/', (req, res) => {
@@ -102,6 +119,13 @@ app.post('/api/persons', (req, res) => {
 
   res.json(person)
 })
+
+// unknownEndpoint - Middleware for unknown endpoints 
+const unknownEndpoint = (req, res) => {
+  res.status(404).send({ error: 'Unknown endpoint' })
+}
+
+app.use(unknownEndpoint)
 
 // Startup the server.
 const PORT = 3001
