@@ -7,9 +7,9 @@ const cors = require('cors')
 const Person = require('./models/person')
 
 // generateId - Generates an id for a person.
-const generateId = () => {
+/*const generateId = () => {
   return Math.floor(Math.random() * 100000)
-}
+}*/
 
 // requestLogger - Middleware for requests
 /*const requestLogger = (req, res, next) => {
@@ -20,7 +20,7 @@ const generateId = () => {
   next()
 }*/
 
-morgan.token('person', function (req, res) { return JSON.stringify(req.body) })
+morgan.token('person', function (req) { return JSON.stringify(req.body) })
 
 // Middlewares
 app.use(cors())
@@ -42,8 +42,8 @@ app.get('/info', (req, res, next) => {
     if (err) {
       next(err)
     } else {
-      res.send("<p>Phonebook has info for " + result + " people.</p>" +
-        "<p>" + date + "</p>")
+      res.send('<p>Phonebook has info for ' + result + ' people.</p>' +
+        '<p>' + date + '</p>')
     }
   })
 })
@@ -72,13 +72,13 @@ app.get('/api/persons/:id', (req, res, next) => {
 // DELETE /api/persons/:id - Deletes a person with a specfic id.
 app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
-    .then(result => {
+    .then(() => {
       res.status(204).end()
     })
     .catch(error => next(error))
 })
 
-// PUT /api/persons/:id - Update a person 
+// PUT /api/persons/:id - Update a person.
 app.put('/api/persons/:id', (req, res, next) => {
   const body = req.body
 
@@ -116,7 +116,7 @@ app.post('/api/persons', (req, res, next) => {
     .catch(error => next(error))
 })
 
-// unknownEndpoint - Middleware for unknown endpoints 
+// unknownEndpoint - Middleware for unknown endpoints.
 const unknownEndpoint = (req, res) => {
   res.status(404).send({ error: 'Unknown endpoint' })
 }
