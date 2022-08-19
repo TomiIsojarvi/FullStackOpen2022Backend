@@ -4,11 +4,13 @@ const dummy = (blogs) => {
   return 1
 }
 
+// Total likes
 const totalLikes = (blogs) => {
   const likes = blogs.map((blog) => blog.likes)
   return likes.reduce((sum, item) => sum + item, 0)
 }
 
+// Favorite blog
 const favoriteBlog = (blogs) => {
   if (blogs.length === 0)
     return {}
@@ -22,6 +24,7 @@ const favoriteBlog = (blogs) => {
   }
 }
 
+// Author with most blogs
 const mostBlogs = (blogs) => {
   if (blogs.length === 0)
     return {}
@@ -34,6 +37,7 @@ const mostBlogs = (blogs) => {
   return { author: mostBlogs[0], blogs: mostBlogs[1] }
 }
 
+// Author with most likes
 const mostLikes = (blogs) => {
   if (blogs.length === 0)
     return {}
