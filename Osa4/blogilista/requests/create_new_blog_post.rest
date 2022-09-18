@@ -1,10 +1,10 @@
 POST http://localhost:3003/api/blogs/
 Content-Type: application/json
-Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRlc3QxMjMiLCJpZCI6IjYzMDY2YzYyZmVkZGUyYWNiZDNkMTZlMCIsImlhdCI6MTY2MTM2NTM4Nn0.5eY-4T7-uv66uWmyq9l8sUDpY3p43gCmMrMkMxizc5c
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRlc3QxMjMiLCJpZCI6IjYzMDY2YzYyZmVkZGUyYWNiZDNkMTZlMCIsImlhdCI6MTY2MjAzMzYzMX0.5CDuXnQh42TymVxBP2a8-K5EzVeB_poVDJCYztqlNEs
 
 {
-    "title": "Testing blog...",
-    "author": "Test Author",
+    "title": "Testing blog...4",
+    "author": "Test Author4",
     "url": "http://www.google.com",
     "likes": 100
 }
